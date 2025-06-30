@@ -1,0 +1,27 @@
+# Configuration for EPL Score Prediction MLOps Pipeline
+
+s3:
+  bucket: "eplprediction-mlops"
+  raw_data_key: "data/raw_epl_data.csv"
+  processed_data_key: "data/processed_epl_data.csv"
+  model_key: "models/epl_model.pkl"
+  encoder_key: "models/epl_label_encoder.pkl"
+  data_prefix: "data/"
+  models_prefix: "models/"
+  logs_prefix: "logs/"
+
+model:
+  version: "1.0.0"
+  ab_test_threshold: 0.05  # 5% accuracy drop triggers rollback
+  baseline_accuracy: 0.70
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+
+monitoring:
+  prometheus_port: 8001
+
+mlflow:
+  tracking_uri: "http://localhost:5000"
+  experiment_name: "epl_score_prediction" 

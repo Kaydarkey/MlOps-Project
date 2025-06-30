@@ -1,0 +1,92 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Editors/IDEs
+.vscode/
+.idea/
+.spyderproject
+.spyproject
+.ropeproject
+
+# Build/distribution
+build/
+dist/
+*.egg-info/
+.eggs/
+wheels/
+*.egg
+MANIFEST
+
+# Test/coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+.hypothesis/
+
+# Mypy, Pyre, Pytype, Cython
+.mypy_cache/
+.pyre/
+.pytype/
+cython_debug/
+
+# Logs and local databases
+*.log
+*.db
+logs/
+.cache/
+tmp/
+bak/
+
+# S3/MLflow/Artifacts
+mlruns/
+mlartifacts/
+
+# Data files (ignore only large/intermediate, not the directory)
+data/E0.csv
+data/E1.csv
+data/raw_epl_data.csv
+data/eda.ipynb
+*.pkl
+
+# Local config/secrets (but not the config directory itself)
+.env
+.env.local
+*.secret
+*.local
+
+# Flask/instance
+instance/
+.webassets-cache
+
+# Misc
+*.bak
+*.tmp
+
+# Remove these lines to keep source tracked!
+# config/
+# data/
+# scripts/
+# tests/
+
+    

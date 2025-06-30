@@ -1,0 +1,11 @@
+boto3
+mlflow
+pandas
+prefect
+prometheus_client
+PyYAML
+scikit-learn
+s3fs
+requests
+openai
+prometheus-fastapi-instrumentator 

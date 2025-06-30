@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'epl_model_evaluation'
+    static_configs:
+      - targets: ['host.docker.internal:8001']
+  - job_name: 'epl_inference_api'
+    static_configs:
+      - targets: ['inference_api:8000']
+  - job_name: 'epl_evaluation_metrics'
+    static_configs:
+      - targets: ['host.docker.internal:8002'] 

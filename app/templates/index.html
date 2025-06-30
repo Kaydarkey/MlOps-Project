@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Score Predictor</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Football Score Predictor</h1>
+    <form method="POST">
+        <label for="team_a">Team A:</label>
+        <select id="team_a" name="team_a" required>
+            <option value="">Select Team A</option>
+            {% for team in teams %}
+                <option value="{{ team }}" {% if team == team_a %}selected{% endif %}>{{ team }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <label for="team_b">Team B:</label>
+        <select id="team_b" name="team_b" required>
+            <option value="">Select Team B</option>
+            {% for team in teams %}
+                <option value="{{ team }}" {% if team == team_b %}selected{% endif %}>{{ team }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <button type="submit">Predict Score</button>
+    </form>
+    {% if error %}
+        <h2 style="color: red;">Error</h2>
+        <p style="color: red; font-weight: bold;">{{ error }}</p>
+    {% endif %}
+    {% if prediction is not none %}
+        <h2>Prediction Result</h2>
+        <p>{{ team_a }} vs {{ team_b }}: <strong>{{ prediction }}</strong></p>
+    {% endif %}
+</body>
+</html> 
