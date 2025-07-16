@@ -11,7 +11,7 @@ from train import train_model
 from evaluate import evaluate_model
 
 # Download latest data from S3 before anything else
-subprocess.run(['python', 'scripts/download_latest_data.py'], check=True)
+subprocess.run(['python3', 'scripts/download_latest_data.py'], check=True)
 
 @task
 def collect_data_task():

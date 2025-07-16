@@ -7,10 +7,32 @@ app = Flask(__name__)
 
 # Load regression models for score prediction
 import joblib
+import boto3
+import yaml
+from io import BytesIO
 home_goals_model_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'home_goals_model.pkl')
 away_goals_model_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'away_goals_model.pkl')
-home_goals_model = joblib.load(home_goals_model_path) if os.path.exists(home_goals_model_path) else None
-away_goals_model = joblib.load(away_goals_model_path) if os.path.exists(away_goals_model_path) else None
+
+def load_model_from_s3(model_key):
+    with open(os.path.join(os.path.dirname(__file__), '..', 'configs', 'config.yaml'), 'r') as f:
+        config = yaml.safe_load(f)
+    bucket_name = config['s3']['bucket']
+    s3_client = boto3.client('s3')
+    try:
+        obj = s3_client.get_object(Bucket=bucket_name, Key=model_key)
+        model_bytes = obj['Body'].read()
+        return joblib.load(BytesIO(model_bytes))
+    except Exception as e:
+        print(f"[WARNING] Could not load {model_key} from S3: {e}")
+        return None
+
+home_goals_model = load_model_from_s3('models/home_goals_model.pkl')
+if home_goals_model is None:
+    home_goals_model = joblib.load(home_goals_model_path) if os.path.exists(home_goals_model_path) else None
+
+away_goals_model = load_model_from_s3('models/away_goals_model.pkl')
+if away_goals_model is None:
+    away_goals_model = joblib.load(away_goals_model_path) if os.path.exists(away_goals_model_path) else None
 
 # Extract unique teams from data
 csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'processed_epl_data.csv')

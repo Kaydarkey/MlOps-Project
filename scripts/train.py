@@ -1,7 +1,7 @@
 import pandas as pd
 import joblib
 from pathlib import Path
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelEncoder
@@ -10,6 +10,7 @@ import boto3
 from io import BytesIO
 import mlflow
 import mlflow.sklearn
+from scipy.stats import randint, uniform
 
 def train_model(s3_processed_path: str):
     """
@@ -73,15 +74,31 @@ def train_model(s3_processed_path: str):
             x, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded
         )
 
-        # Train a RandomForestClassifier
-        print("Training RandomForestClassifier...")
-        model = RandomForestClassifier(
-            n_estimators=100, 
+        # Hyperparameter tuning with RandomizedSearchCV
+        param_dist = {
+            'n_estimators': randint(100, 301),
+            'max_depth': [None, 10, 20, 30, 40, 50],
+            'min_samples_split': randint(2, 11),
+            'min_samples_leaf': randint(1, 5),
+            'max_features': ['sqrt', 'log2', None],
+            'class_weight': [None, 'balanced']
+        }
+        print("Starting RandomizedSearchCV for RandomForestClassifier tuning...")
+        base_model = RandomForestClassifier(random_state=42)
+        search = RandomizedSearchCV(
+            base_model,
+            param_distributions=param_dist,
+            n_iter=20,
+            scoring='accuracy',
+            n_jobs=-1,
+            cv=3,
             random_state=42,
-            min_samples_leaf=1,
-            max_features='sqrt'
+            verbose=1
         )
-        model.fit(x_train, y_train)
+        search.fit(x_train, y_train)
+        print(f"Best parameters found: {search.best_params_}")
+        mlflow.log_params(search.best_params_)
+        model = search.best_estimator_
 
         # Log parameters
         mlflow.log_params(model.get_params())

@@ -1,22 +1,23 @@
 # EPL Score Prediction MLOps Pipeline
 
-This project implements a production-grade machine learning pipeline to predict the outcomes of English Premier League (EPL) matches. It is built with a focus on MLOps best practices, including automated pipelines, experiment tracking, model management, and real-time monitoring.
+This project predicts English Premier League (EPL) match outcomes using a robust, production-grade MLOps pipeline. It automates everything from data collection to model deployment, with real-time monitoring and CI/CD, following best practices for reliability, reproducibility, and scalability.
 
-## Core Features
-- **Automated Training Pipeline:** Orchestrated with Prefect to automate data collection, preprocessing, model training, and evaluation.
-- **Experiment Tracking:** Uses MLflow to log model parameters, metrics, and artifacts for every run.
-- **Centralized Artifact Storage:** Leverages AWS S3 for storing datasets, trained models, and MLflow artifacts.
-- **Live Model Evaluation:** The final pipeline step serves model performance metrics via a Prometheus endpoint for real-time monitoring.
-- **Monitoring & Visualization:** Prometheus scrapes metrics from the evaluation service, and Grafana visualizes them in real time.
-- **Containerized Inference API:** FastAPI-based inference service, containerized and managed via Docker Compose, exposes a `/metrics` endpoint for Prometheus.
-- **CI/CD Ready:** Includes a `Jenkinsfile` for setting up a continuous integration and deployment pipeline using Docker Compose.
+## Key Features
+- **End-to-End Automation:** Prefect orchestrates data collection, preprocessing, model training, evaluation, and deployment.
+- **Experiment Tracking:** MLflow logs every model run, parameter, and metric, with artifacts stored in AWS S3.
+- **Centralized Storage:** All datasets, models, and experiment logs are managed in S3 for easy access and reproducibility.
+- **Model Serving:** Predictions are available via both a user-friendly web UI (Flask) and a programmatic FastAPI endpoint.
+- **Live Monitoring:** Model performance metrics are exposed via Prometheus and visualized in Grafana dashboards.
+- **Containerized Deployment:** Docker Compose manages the inference API, Prometheus, and Grafana for consistent, portable deployment.
+- **CI/CD Pipeline:** Jenkins automates testing, building, and deployment, ensuring code quality and reliability.
 
 ## Tech Stack
 - **Orchestration:** Prefect
 - **Experiment Tracking:** MLflow
 - **Cloud Storage:** AWS S3
 - **ML & Data:** Pandas, Scikit-learn
-- **API & Inference:** FastAPI (defined in `inference/`)
+- **Web UI:** Flask (app/app.py)
+- **API & Inference:** FastAPI (inference/inference_api.py)
 - **Monitoring:** Prometheus, Grafana
 - **Containerization:** Docker, Docker Compose
 - **CI/CD:** Jenkins
@@ -25,42 +26,67 @@ This project implements a production-grade machine learning pipeline to predict 
 ```
 MlOps-Project/
 ├── app/
-│   ├── app.py                # Web UI (if used)
+│   ├── app.py                # Flask web UI for predictions
 │   ├── static/
 │   └── templates/
 ├── configs/
-│   └── config.yaml           # Paths, S3 bucket, MLflow URI
-├── data/                     # Local source data (E0.csv, E1.csv, enhanced_data.csv, etc.)
+│   └── config.yaml           # Central config (S3, MLflow, etc.)
+├── data/                     # Local data files (raw, processed, etc.)
 ├── inference/
-│   ├── inference_api.py      # FastAPI serving logic
-│   └── Dockerfile            # Dockerfile for the inference service
+│   ├── inference_api.py      # FastAPI for programmatic predictions & metrics
+│   └── Dockerfile            # Inference service container
 ├── pipelines/
-│   ├── train_model_dag.py    # Prefect flow for the main pipeline
-│   └── rollback.py           # Model rollback logic
+│   ├── train_model_dag.py    # Prefect pipeline (end-to-end automation)
+│   └── rollback.py           # (Planned) Model rollback logic
 ├── scripts/
-│   ├── combine_local_data.py # Merges local CSVs
-│   ├── preprocess.py         # Cleans data and engineers features
-│   ├── train.py              # Trains model and logs to MLflow
-│   ├── evaluate.py           # Evaluates the latest model from MLflow and exposes Prometheus metrics
+│   ├── combine_local_data.py # Merges EPL & Championship CSVs
+│   ├── preprocess.py         # Cleans and engineers features
+│   ├── train.py              # Trains classifier, logs to MLflow
+│   ├── train_regression.py   # Trains regression models for score prediction
+│   ├── evaluate.py           # Evaluates model, exposes Prometheus metrics
 │   ├── download_latest_data.py # Downloads latest data from S3
-│   ├── parse_results_to_csv.py # Parses raw match results text to CSV
-│   ├── parse_league_table_to_csv.py # Parses league table text to CSV
+│   ├── parse_results_to_csv.py # Parses match results to CSV
+│   ├── parse_league_table_to_csv.py # Parses league table to CSV
 │   └── ...                   # Other utility scripts
 ├── tests/                    # Unit and integration tests
-├── Jenkinsfile               # CI/CD pipeline definition (uses Docker Compose)
-├── docker-compose.yml        # Orchestrates inference, Prometheus, and Grafana
-├── grafana/                  # Grafana provisioning configs
+├── Jenkinsfile               # CI/CD pipeline (Docker Compose)
+├── docker-compose.yml        # Orchestrates inference, Prometheus, Grafana
+├── grafana/                  # Grafana provisioning/configs
 ├── mlruns/                   # Local MLflow tracking data
 ├── requirements.txt          # Python dependencies
 └── README.md
 ```
+
+## How the Pipeline Works
+
+1. **Data Collection & Preparation**
+   - EPL and Championship CSVs are merged (`combine_local_data.py`).
+   - Combined data is uploaded to S3 (`data_collection.py`).
+   - Data is cleaned and features (rolling averages, etc.) are engineered (`preprocess.py`).
+
+2. **Model Training & Tracking**
+   - A RandomForestClassifier predicts match outcomes (`train.py`).
+   - Separate regressors predict exact home/away goals (`train_regression.py`).
+   - All runs, parameters, and metrics are logged to MLflow, with artifacts in S3.
+
+3. **Model Evaluation & Monitoring**
+   - The latest model is evaluated, and metrics (accuracy, F1, etc.) are exposed via a Prometheus endpoint (`evaluate.py`).
+   - Prometheus scrapes these metrics; Grafana visualizes them in real time.
+
+4. **Model Serving**
+   - **Web UI:** Flask app (`app/app.py`) lets users select teams and get score predictions.
+   - **API:** FastAPI service (`inference/inference_api.py`) exposes REST endpoints for predictions and metrics.
+
+5. **Automation & CI/CD**
+   - **Pipeline Orchestration:** Prefect automates the full workflow (`pipelines/train_model_dag.py`).
+   - **CI/CD:** Jenkinsfile defines steps for testing, building, and deploying with Docker Compose.
 
 ## Setup and Installation
 
 ### 1. Prerequisites
 - Python 3.10+
 - Docker & Docker Compose
-- An AWS account with an S3 bucket and configured credentials (`~/.aws/credentials`).
+- AWS account with S3 bucket and credentials (`~/.aws/credentials`)
 
 ### 2. Clone the Repository
 ```bash
@@ -80,10 +106,10 @@ pip install -r requirements.txt
 ```
 
 ### 5. Configure the Project
-Update `configs/config.yaml` with your specific settings:
+Edit `configs/config.yaml` with your S3, MLflow, and other settings:
 ```yaml
 s3:
-  bucket: "your-s3-bucket-name" # e.g., eplprediction-mlops
+  bucket: "your-s3-bucket-name"
   # ... other keys
 mlflow:
   tracking_uri: "http://localhost:5000"
@@ -92,68 +118,63 @@ mlflow:
 ```
 
 ### 6. Download the Data
-The pipeline requires two local CSV files. Download them and place them in the `data/` directory:
-1.  **Premier League Data (2023/24):** [Download Link](https://www.football-data.co.uk/mmz4281/2324/E0.csv)
-    -   Save as `data/E0.csv`.
-2.  **Championship Data (2023/24):** [Download Link](https://www.football-data.co.uk/mmz4281/2324/E1.csv)
-    -   Save as `data/E1.csv`.
+Download and place these files in the `data/` directory:
+- [EPL Data 2023/24](https://www.football-data.co.uk/mmz4281/2324/E0.csv) → `data/E0.csv`
+- [Championship Data 2023/24](https://www.football-data.co.uk/mmz4281/2324/E1.csv) → `data/E1.csv`
 
-## How to Run the Pipeline
+## Running the System
 
-### 1. Start the MLflow UI
-In a separate terminal, start the MLflow tracking server. This will also store run data locally in the `mlruns` directory.
+### 1. Start MLflow UI
 ```bash
 mlflow ui
 ```
-You can access the UI at `http://localhost:5000`.
+Access at [http://localhost:5000](http://localhost:5000)
 
-### 2. Start Monitoring Stack (Prometheus, Grafana, Inference API)
-Run all services using Docker Compose:
+### 2. Start Monitoring & Inference Stack
 ```bash
 docker-compose up --build
 ```
-- This will start the inference API (FastAPI), Prometheus, and Grafana.
-- Prometheus scrapes metrics from the inference API's `/metrics` endpoint.
-- Grafana is pre-configured to use Prometheus as a data source.
-- Access Grafana at [http://localhost:3000](http://localhost:3000) (default login: `admin`/`admin`).
-- Visualize model evaluation metrics in Grafana dashboards.
+- Starts inference API (FastAPI), Prometheus, and Grafana.
+- Prometheus scrapes metrics from `/metrics` endpoint.
+- Grafana dashboards at [http://localhost:3000](http://localhost:3000) (default: admin/admin).
 
-### 3. Execute the Prefect Flow
-Run the main training pipeline:
+### 3. Run the Training Pipeline
 ```bash
 python pipelines/train_model_dag.py
 ```
-- The pipeline will automatically download the latest enhanced data and league table from S3 before each run.
+- Downloads latest data from S3, processes, trains, evaluates, and logs everything.
 
-### Pipeline Stages
-1.  **Collect Data:** The `combine_local_data` script merges `E0.csv` and `E1.csv` into `raw_epl_data.csv`, which is then uploaded to S3.
-2.  **Preprocess Data:** Raw data is read from S3, cleaned, and features (rolling averages for team performance) are engineered. The processed data is saved back to S3.
-3.  **Train Model:** The processed data is used to train a `RandomForestClassifier`. The model, label encoder, parameters, and accuracy metric are logged to MLflow.
-4.  **Evaluate Model:** The latest model version is loaded from the MLflow Model Registry. It then runs in a loop, exposing performance metrics (accuracy, F1 score) on a Prometheus endpoint at `http://localhost:8000/metrics`.
+### 4. Use the Web UI
+- Go to the Flask app (usually at [http://localhost:5000] or as configured) to select teams and get predictions.
 
-### 4. CI/CD Pipeline
-- The `Jenkinsfile` is set up to use Docker Compose for building, running, and stopping services.
-- Automated tests are run inside the inference API container using `pytest`.
-- Integrate with Jenkins for a full CI/CD loop.
+### 5. Use the API
+- FastAPI endpoints for predictions and metrics (see `inference/inference_api.py`).
 
-## Prometheus & Grafana Integration
-- **Prometheus** scrapes metrics from the inference API's `/metrics` endpoint (exposed by `prometheus_fastapi_instrumentator`).
-- **Grafana** is pre-provisioned to use Prometheus as a data source and can be used to visualize real-time model evaluation metrics.
-- All services are orchestrated via `docker-compose.yml`.
+## Pipeline Stages (Detailed)
+1. **Collect Data:** Merge and upload raw data to S3.
+2. **Preprocess Data:** Clean and engineer features, save processed data to S3.
+3. **Train Model:** Train classifier and regressors, log to MLflow.
+4. **Evaluate Model:** Expose metrics for monitoring.
+5. **Serve Predictions:** Web UI and API for user/programmatic access.
+6. **Monitor & Visualize:** Prometheus and Grafana for real-time model health.
+7. **CI/CD:** Jenkins automates testing, building, and deployment.
 
-## Automated Data Pipeline
-- The pipeline automatically downloads the latest enhanced data and league table from S3 before each run, ensuring the most up-to-date data is used for training and evaluation.
-- Scripts for parsing raw match results and league tables to CSV, merging with S3 data, and uploading results are included in the `scripts/` directory.
+## Monitoring & Visualization
+- **Prometheus:** Collects real-time model metrics from the inference API.
+- **Grafana:** Visualizes metrics with pre-configured dashboards.
+
+## CI/CD
+- **Jenkins:** Runs tests, builds Docker images, starts/stops services, and ensures everything works before deployment.
 
 ## Troubleshooting
-- **Port Conflicts:** If you encounter `OSError: [Errno 98] Address already in use`, change the port used in the evaluation script or stop the process using the port (e.g., `lsof -i :8000` and `kill <pid>`).
-- **Missing /metrics Endpoint:** Ensure `prometheus_fastapi_instrumentator` is installed and properly integrated in the FastAPI app.
-- **Docker Build Issues:** Make sure the build context includes all necessary files (e.g., `requirements.txt`, `configs/`).
+- **Port Conflicts:** If you see `OSError: [Errno 98] Address already in use`, change the port or stop the process using it (`lsof -i :8000` and `kill <pid>`).
+- **Missing /metrics Endpoint:** Ensure `prometheus_fastapi_instrumentator` is installed and integrated in FastAPI.
+- **Docker Build Issues:** Make sure all necessary files (e.g., `requirements.txt`, `configs/`) are present.
 
 ## Future Work
-- Fully implement the `inference_api.py` to serve predictions from the best model.
-- Implement A/B testing and automated model rollback logic.
-- Switch from Prefect's default SQLite database to a more robust backend like PostgreSQL for production use.
+- Fully implement the `inference_api.py` for production-grade predictions.
+- Add A/B testing and automated model rollback.
+- Use a more robust Prefect backend (e.g., PostgreSQL) for production.
 
 ## Authors
 - SKKD
